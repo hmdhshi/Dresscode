@@ -43,6 +43,11 @@ jobs:
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/' android/app/build.gradle.kts 2>/dev/null || true
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' android/app/build.gradle 2>/dev/null || true
 
+      - name: Set app label
+        working-directory: app_tmp
+        run: |
+          sed -i 's/android:label="[^"]*"/android:label="ثبت تخلف پوشش"/' android/app/src/main/AndroidManifest.xml
+
       - name: Build release APK
         working-directory: app_tmp
         run: flutter build apk --release
