@@ -31,7 +31,9 @@ class ImportResult {
   final List<Student> toImport; // یکتا، آماده ذخیره در دیتابیس
   final File reportFile; // اکسل گزارش با شیت تکراری‌ها
   final int totalRows, duplicateRows;
-  ImportResult(this.toImport, this.reportFile, this.totalRows, this.duplicateRows);
+  final List<List<String>> duplicates; // برای شیت «تکراری‌ها» روی گوگل‌شیت
+  ImportResult(this.toImport, this.reportFile, this.totalRows,
+      this.duplicateRows, this.duplicates);
 }
 
 /// ───────── ابزارهای کمکی ─────────
@@ -108,6 +110,7 @@ class ExcelService {
 
     final unique = <String, Student>{}; // کلید: شماره + رشته
     final dupRows = <List<CellValue>>[];
+    final dupText = <List<String>>[];
 
     byNo.forEach((no, group) {
       if (group.length == 1) {
@@ -125,6 +128,10 @@ class ExcelService {
           TextCellValue(s.major),
           IntCellValue(s.sourceRow),
           TextCellValue(exact ? 'ردیف کاملاً تکراری (وارد نشد)' : 'رشته متفاوت (وارد شد)'),
+        ]);
+        dupText.add([
+          no, s.nationalId, s.firstName, s.lastName, s.major, '${s.sourceRow}',
+          exact ? 'ردیف کاملاً تکراری (وارد نشد)' : 'رشته متفاوت (وارد شد)',
         ]);
         if (!exact) unique[s.key] = s;
       }
@@ -147,7 +154,8 @@ class ExcelService {
     rep.delete('Sheet1');
 
     final file = await _save(rep, 'گزارش_آپلود');
-    return ImportResult(unique.values.toList(), file, all.length, dupRows.length);
+    return ImportResult(
+        unique.values.toList(), file, all.length, dupRows.length, dupText);
   }
 
   /// ۲) خروجی تخلف‌ها: شیت دانشجویان متخلف + شیت جزئیات
@@ -201,7 +209,10 @@ class ExcelService {
 
   Future<File> _save(Excel ex, String name) async {
     final dir = await getApplicationDocumentsDirectory();
-    final stamp = Jalali.now().formatCompactDate().replaceAll('/', '');
+    final j = Jalali.now();
+    final stamp = '${j.year}'
+        '${j.month.toString().padLeft(2, '0')}'
+        '${j.day.toString().padLeft(2, '0')}';
     final file = File('${dir.path}/${name}_$stamp.xlsx');
     await file.writeAsBytes(ex.encode()!);
     return file;
