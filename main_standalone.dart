@@ -163,7 +163,10 @@ class _StandaloneHomeState extends State<StandaloneHome> {
         final data = jsonEncode(
             {'v': 1, 'violations': await LocalDb.rawViolations()});
         final dir = await getApplicationDocumentsDirectory();
-        final stamp = Jalali.now().formatCompactDate().replaceAll('/', '');
+        final j = Jalali.now();
+        final stamp = '${j.year}'
+            '${j.month.toString().padLeft(2, '0')}'
+            '${j.day.toString().padLeft(2, '0')}';
         final f = File('${dir.path}/پشتیبان_تخلف_$stamp.json');
         await f.writeAsString(data);
         await Share.shareXFiles([XFile(f.path)]);
